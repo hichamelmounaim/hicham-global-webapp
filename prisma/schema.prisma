@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider  = "sqlite"
+  url       = env("DATABASE_URL")
+}
+
+model Settings {
+  id        Int      @id @default(1)
+  openaiKey    String? // Keep for backward compatibility or direct usage
+  openRouterKey String?
+  aiModel      String   @default("openai/gpt-4o") // Default model
+  goapiKey     String?
+  ttapiKey     String?
+  linkrApiKey  String?   // LinkrAPI (Midjourney proxy)
+  imageProvider String   @default("goapi") // goapi | ttapi | linkrapi
+  prompts       String? // JSON string to store custom system prompts (legacy)
+  promptGroups  String? // JSON: array of named prompt groups
+  
+  // NativeMJ (Discord) Settings
+  nativeMjToken        String?
+  nativeMjServerId     String?
+  nativeMjChannelId    String?
+  nativeMjBannedKeywords String?
+  
+  // WordPress Settings
+  wpUrl         String?
+  wpUser        String?
+  wpAppPass     String?
+
+  // Personalization
+  authorBio     String?
+  expertPersona String?
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String   // bcrypt hashed
+  role      String   @default("USER") // ADMIN | USER
+  avatar    String?
+  bio       String?
+
+  // ─── Subscription & Usage Quotas ──────────────────────────────────
+  isActive            Boolean  @default(true)  // Admin can disable accounts
+  subscriptionTier    String   @default("FREE") // FREE | PRO | ENTERPRISE | CUSTOM
+  monthlyTokenLimit   Int      @default(0)     // 0 = unlimited
+  tokensUsedThisMonth Int      @default(0)
+  monthlyPostLimit    Int      @default(0)     // 0 = unlimited
+  postsUsedThisMonth  Int      @default(0)
+  currentPeriodStart  DateTime @default(now()) // Resets monthly
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Site {
+  id        String   @id @default(uuid())
+  name      String
+  wpUrl     String
+  wpUser    String
+  wpAppPass String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batches   Batch[]
+  pillars   PillarArticle[]
+  campaigns Campaign[]
+}
+
+model Batch {
+  id        String   @id @default(uuid())
+  name      String
+  siteId    String?  // Optional for now to allow migration
+  site      Site?    @relation(fields: [siteId], references: [id])
+  createdAt DateTime @default(now())
+  posts     Post[]
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  batchId   String
+  keyword   String
+  status    String   @default("QUEUED") // QUEUED, PROCESSING, DONE, ERROR
+  step      Int      @default(0)
+  content   String?  // JSON: {title, slug, meta, intro, body, conclusion}
+  
+  // Image URLs
+  featuredImageUrl     String?
+  ingredientsImageUrl  String?
+  finalDishImageUrl    String?
+  
+  // Structured Data
+  recipeData    String?  // JSON: recipe card data (ingredients, instructions, nutrition)
+  rankMathData  String?  // JSON: SEO metadata (focus keyword, schema)
+  socialContent String?  // JSON: {pinterest, reddit, youtube}
+  expertContent String?  // HTML block
+  personalContent String? // HTML block
+  
+  // Token usage tracking
+  promptTokens      Int      @default(0)
+  completionTokens  Int      @default(0)
+  costUsd           Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batch     Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  logs      Log[]
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  message   String
+  level     String   @default("INFO") // INFO, WARN, ERROR, SUCCESS
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model PillarArticle {
+  id          String   @id @default(cuid())
+  title       String
+  keyword     String
+  status      String   @default("DRAFT") // DRAFT, GENERATING, DONE, ERROR
+  wordCount   Int      @default(0)
+  targetWords Int      @default(3000)
+  content     String?  // Full HTML article (sections concatenated)
+  outline     String?  // JSON: [{heading, subheadings[]}]
+  sections    String?  // JSON: [{title, html, wordCount}]
+  seoData     String?  // JSON: {focusKeyword, seoTitle, metaDesc}
+  subtopics   String?  // JSON: array of subtopic strings
+  // Token usage tracking
+  promptTokens      Int      @default(0)
+  completionTokens  Int      @default(0)
+  costUsd           Float    @default(0)
+
+  siteId      String?
+  site        Site?    @relation(fields: [siteId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  logs        PillarLog[]
+}
+
+model PillarLog {
+  id        String         @id @default(uuid())
+  message   String
+  level     String         @default("INFO")
+  pillarId  String?
+  pillar    PillarArticle? @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+}
+
+// Global token usage log for analytics dashboard
+model UsageLog {
+  id               String   @id @default(cuid())
+  source           String   // 'pillar' | 'post' | 'batch'
+  sourceId         String   // pillarId or postId
+  model            String
+  operation        String   // 'outline' | 'section' | 'title' | 'body' | 'social' etc.
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  totalTokens      Int      @default(0)
+  costUsd          Float    @default(0)
+  createdAt        DateTime @default(now())
+}
+
+// ─── Campaign / Drip-Publishing Engine ────────────────────────────────────────
+model Campaign {
+  id              String       @id @default(cuid())
+  name            String
+  status          String       @default("ACTIVE") // ACTIVE | PAUSED | COMPLETED | DRAFT
+  keywords        String       // JSON: string[]
+  siteId          String?
+  site            Site?        @relation(fields: [siteId], references: [id])
+  postsPerRun     Int          @default(1) // how many items to process per cron trigger
+  intervalHours   Int          @default(24) // publish interval in hours
+  autoPublish     Boolean      @default(true)  // auto-push to WordPress
+  contentType     String       @default("post") // 'post' | 'pillar'
+  totalItems      Int          @default(0)
+  completedItems  Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  queueItems      QueueItem[]
+}
+
+model QueueItem {
+  id           String    @id @default(cuid())
+  campaignId   String
+  campaign     Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  keyword      String
+  status       String    @default("PENDING") // PENDING | PROCESSING | DONE | ERROR | SKIPPED
+  scheduledAt  DateTime?
+  processedAt  DateTime?
+  postId       String?   // FK to generated Post (if contentType=post)
+  pillarId     String?   // FK to generated PillarArticle (if contentType=pillar)
+  wpLink       String?
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ─── Keyword Spy List ─────────────────────────────────────────────────────────
+model SpyKeyword {
+  id            String   @id @default(cuid())
+  keyword       String   @unique
+  status        String   @default("NEW") // NEW, IN_PROGRESS, USED
+  notes         String?  // Optional notes (e.g., source, volume, difficulty)
+  
+  // Fields inspired by Pinterest Growth Agent
+  source        String   @default("manual") // manual, pinterest_scraper, competitor
+  rank          Int?     // Suggestion rank or volume score
+  relatedTerms  String?  // JSON string of related keywords
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model NativeMjTask {
+  id          String   @id @default(uuid())
+  prompt      String
+  status      String   @default("QUEUED") // QUEUED, PROCESSING, COMPLETED, FAILED
+  messageId   String?  // Discord Message ID to track the response
+  imageUrl    String?
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

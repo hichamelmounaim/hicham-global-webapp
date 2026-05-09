@@ -1,26 +1,150 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+@theme {
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-space-grotesk);
+
+  --color-background: var(--bg-background);
+  --color-foreground: var(--bg-foreground);
+  --color-primary: var(--bg-primary);
+  --color-primary-foreground: var(--bg-primary-foreground);
+  --color-primary-container: var(--bg-primary-container);
+  --color-on-primary: var(--bg-on-primary);
+  --color-secondary: var(--bg-secondary);
+  --color-secondary-foreground: var(--bg-secondary-foreground);
+  --color-secondary-container: var(--bg-secondary-container);
+  --color-on-secondary: var(--bg-on-secondary);
+  --color-tertiary: var(--bg-tertiary);
+  --color-tertiary-foreground: var(--bg-tertiary-foreground);
+  --color-tertiary-container: var(--bg-tertiary-container);
+  --color-surface: var(--bg-surface);
+  --color-surface-dim: var(--bg-surface-dim);
+  --color-surface-bright: var(--bg-surface-bright);
+  --color-surface-container-lowest: var(--bg-surface-container-lowest);
+  --color-surface-container-low: var(--bg-surface-container-low);
+  --color-surface-container: var(--bg-surface-container);
+  --color-surface-container-high: var(--bg-surface-container-high);
+  --color-surface-container-highest: var(--bg-surface-container-highest);
+  --color-outline: var(--bg-outline);
+  --color-outline-variant: var(--bg-outline-variant);
+  --color-error: var(--bg-error);
+  --color-on-error: var(--bg-on-error);
+
+  /* ── Component-level tokens (shadcn/ui + Radix) ── */
+  --color-card: var(--bg-card);
+  --color-card-foreground: var(--bg-card-foreground);
+  --color-popover: var(--bg-popover);
+  --color-popover-foreground: var(--bg-popover-foreground);
+  --color-muted: var(--bg-muted);
+  --color-muted-foreground: var(--bg-muted-foreground);
+  --color-accent: var(--bg-accent);
+  --color-accent-foreground: var(--bg-accent-foreground);
+  --color-destructive: var(--bg-destructive);
+  --color-destructive-foreground: var(--bg-destructive-foreground);
+  --color-border: var(--bg-border);
+  --color-input: var(--bg-input);
+  --color-ring: var(--bg-ring);
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Light Mode Variables */
+    --bg-background: #ffffff;
+    --bg-foreground: #0c0e12;
+    --bg-primary: #005d63;
+    --bg-primary-foreground: #8ff5ff;
+    --bg-primary-container: #00eefc;
+    --bg-on-primary: #ffffff;
+    --bg-secondary: #9800d0;
+    --bg-secondary-foreground: #d575ff;
+    --bg-secondary-container: #390050;
+    --bg-on-secondary: #ffffff;
+    --bg-tertiary: #1a1f5e;
+    --bg-tertiary-foreground: #8b95ff;
+    --bg-tertiary-container: #4957fc;
+    --bg-surface: #f8f9fe;
+    --bg-surface-dim: #eef0f6;
+    --bg-surface-bright: #ffffff;
+    --bg-surface-container-lowest: #ffffff;
+    --bg-surface-container-low: #f3f4f9;
+    --bg-surface-container: #eaecf3;
+    --bg-surface-container-high: #e1e3ec;
+    --bg-surface-container-highest: #d9dbe3;
+    --bg-outline: #73757a;
+    --bg-outline-variant: #c0c2c8;
+    --bg-error: #ba1a1a;
+    --bg-on-error: #ffffff;
+    
+    --bg-card: #ffffff;
+    --bg-card-foreground: #0c0e12;
+    --bg-popover: #ffffff;
+    --bg-popover-foreground: #0c0e12;
+    --bg-muted: #f3f4f9;
+    --bg-muted-foreground: #73757a;
+    --bg-accent: #f3f4f9;
+    --bg-accent-foreground: #0c0e12;
+    --bg-destructive: #ba1a1a;
+    --bg-destructive-foreground: #ffffff;
+    --bg-border: #e1e3ec;
+    --bg-input: #e1e3ec;
+    --bg-ring: #005d63;
+  }
+
+  .dark {
+    /* Dark Mode Variables (Obsidian Neon) */
+    --bg-background: #0c0e12;
+    --bg-foreground: #f8f9fe;
+    --bg-primary: #8ff5ff;
+    --bg-primary-foreground: #005d63;
+    --bg-primary-container: #00eefc;
+    --bg-on-primary: #005d63;
+    --bg-secondary: #d575ff;
+    --bg-secondary-foreground: #390050;
+    --bg-secondary-container: #9800d0;
+    --bg-on-secondary: #390050;
+    --bg-tertiary: #8b95ff;
+    --bg-tertiary-foreground: #1a1f5e;
+    --bg-tertiary-container: #4957fc;
+    --bg-surface: #0c0e12;
+    --bg-surface-dim: #0c0e12;
+    --bg-surface-bright: #282c32;
+    --bg-surface-container-lowest: #000000;
+    --bg-surface-container-low: #111417;
+    --bg-surface-container: #171a1e;
+    --bg-surface-container-high: #1c2025;
+    --bg-surface-container-highest: #22262b;
+    --bg-outline: #73757a;
+    --bg-outline-variant: #46484c;
+    --bg-error: #ff716c;
+    --bg-on-error: #490006;
+    
+    --bg-card: #111417;
+    --bg-card-foreground: #f8f9fe;
+    --bg-popover: #1c2025;
+    --bg-popover-foreground: #f8f9fe;
+    --bg-muted: #1c2025;
+    --bg-muted-foreground: #a1a1aa;
+    --bg-accent: #22262b;
+    --bg-accent-foreground: #f8f9fe;
+    --bg-destructive: #ff716c;
+    --bg-destructive-foreground: #f8f9fe;
+    --bg-border: #46484c;
+    --bg-input: #46484c;
+    --bg-ring: #8ff5ff;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-background);
+  color: var(--color-foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.bg-sidebar {
+  background-color: var(--color-surface-container-low);
 }
