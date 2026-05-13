@@ -1,0 +1,9 @@
+{
+  "project_uuid": "pjj1kg3fttc0rsoyderrso4b",
+  "server_uuid": "lco8okc4c8k8wwwk8cogko88",
+  "environment_name": "production",
+  "git_repository": "https://github.com/hichamelmounaim/hicham-global-webapp",
+  "git_branch": "main",
+  "build_pack": "nixpacks",
+  "ports_exposes": "3000"
+}
